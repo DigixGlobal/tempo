@@ -1,0 +1,13 @@
+extends:
+  eslint-config-airbnb
+
+settings:
+  ecmascript: 6
+
+rules:
+  arrow-body-style: 0
+  max-len: 0
+
+parserOptions:
+  ecmaFeatures:
+    experimentalObjectRestSpread: true
