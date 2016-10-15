@@ -20,7 +20,7 @@ tempo.currentBlock;
 // API for TestRPC only
 tempo.waitForBlocks(n, secondsToProgress);
 tempo.waitUntilBlock(n, secondsToProgress);
-// TODO
+// TODO implement snapshots
 tempo.snapshot('snapshotId');
 tempo.restore('snapshotId');
 ```

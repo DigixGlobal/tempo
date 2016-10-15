@@ -1,18 +1,14 @@
-import asyncWhile from 'async-while';
-
 export default class Tempo {
 
   constructor(web3) {
     this.web3 = web3;
     this.currentBlock = 0;
-    return this.determineApiSupport()
-    .then(this.getCurrentBlock())
+    return this._determineApiSupport()
+    .then(this._getCurrentBlock())
     .then(() => this);
   }
 
-  // TODO events listener for updating block info
-
-  determineApiSupport() {
+  _determineApiSupport() {
     return new Promise((resolve) => {
       this.web3.version.getNode((err, node) => {
         this.testRpcApi = node.includes('TestRPC');
@@ -21,7 +17,7 @@ export default class Tempo {
     });
   }
 
-  getCurrentBlock() {
+  _getCurrentBlock() {
     return new Promise((resolve) => {
       this.web3.eth.getBlock('latest', (e, block) => {
         this.currentBlock = block.number;
@@ -32,7 +28,7 @@ export default class Tempo {
   }
 
   // TestRPC Specific
-  sendRpc(method, params) {
+  _sendRpc(method, params) {
     return new Promise((resolve) => {
       this.web3.currentProvider.sendAsync({
         jsonrpc: '2.0',
@@ -43,28 +39,9 @@ export default class Tempo {
     });
   }
 
-  waitForBlocks(blocksToWait, secondsToJump) {
-    return new Promise((resolve) => {
-      this.getCurrentBlock().then(() => {
-        resolve(this.currentBlock + blocksToWait);
-      });
-    })
-    .then((targetBlock) => {
-      return this.waitUntilBlock(targetBlock, secondsToJump);
-    });
-  }
-
-  waitUntilBlock(targetBlock, secondsToJump) {
-    if (this.testRpcApi) {
-      return this.testRpcWaitForBlockNumber(targetBlock, secondsToJump);
-    }
-    return this.gethWaitForBlockNumber(targetBlock);
-  }
-
-
-  testRpcWaitForBlockNumber(targetBlock, secondsToJump) {
+  _testRpcWaitForBlockNumber(targetBlock, secondsToJump) {
     const logBlock = (n) => {
-      process.stdout.write(`      🚀  warped to block ${n}\n`);
+      process.stdout.write(`🚀  warped to block ${n}\n`);
     };
     const realTargetBlock = secondsToJump ? targetBlock - 1 : targetBlock;
     return new Promise((resolve) => {
@@ -76,26 +53,62 @@ export default class Tempo {
             return resolve();
           }
           logBlock(this.currentBlock + 1);
-          return this.sendRpc('evm_increaseTime', [secondsToJump])
-          .then(() => this.sendRpc('evm_mine'))
-          .then(() => this.getCurrentBlock())
+          return this._sendRpc('evm_increaseTime', [secondsToJump])
+          .then(() => this._sendRpc('evm_mine'))
+          .then(() => this._getCurrentBlock())
           .then(() => resolve());
         }
-        return this.sendRpc('evm_mine')
-        .then(() => this.getCurrentBlock())
+        return this._sendRpc('evm_mine')
+        .then(() => this._getCurrentBlock())
         .then(asyncIterator);
       };
       asyncIterator();
     });
   }
 
-  gethWaitForBlockNumber(blockToWait) {
+  _gethWaitForBlockNumber(targetBlock) {
     return new Promise((resolve) => {
-      console.log('howdy')
-      resolve();
-    })
+      let resolved = false;
+      // start mining until we reach the target block...
+      return this._sendRpc('miner_start', [3]).then(() => {
+        // start checking to see if the last block is our block...
+        const filter = this.web3.eth.filter('latest');
+        filter.watch(() => {
+          this._getCurrentBlock().then(() => {
+            if (this.currentBlock >= targetBlock && !resolved) {
+              process.stdout.write(`⛏  reached block ${this.currentBlock}\n`);
+              resolved = true;
+              filter.stopWatching();
+              this._sendRpc('miner_stop')
+              .then(() => resolve());
+            }
+          });
+        });
+      });
+    });
   }
-  // TODO implement
+
+  // Public API
+
+  waitForBlocks(blocksToWait, secondsToJump) {
+    return new Promise((resolve) => {
+      this._getCurrentBlock().then(() => {
+        resolve(this.currentBlock + blocksToWait);
+      });
+    })
+    .then((targetBlock) => {
+      return this.waitUntilBlock(targetBlock, secondsToJump);
+    });
+  }
+
+  waitUntilBlock(targetBlock, secondsToJump) {
+    if (this.testRpcApi) {
+      return this._testRpcWaitForBlockNumber(targetBlock, secondsToJump);
+    }
+    return this._gethWaitForBlockNumber(targetBlock);
+  }
+
+  // TODO implement snapshots
 
   snapshot() {
 
@@ -103,16 +116,7 @@ export default class Tempo {
   restore() {
 
   }
-  // pass it a web3 object, pull the host, then return an object that controls time...
-  // check for support of forward.
 
-  // api
-  // get current block
-  // wait until block n
-  // wait x blocks
+  // TODO events listener for polling for block info?
 
-  // TESTRPC compatible
-  // set the time
-  // create a snapshot
-  // go to snapshot
 }

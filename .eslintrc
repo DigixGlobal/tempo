@@ -7,6 +7,7 @@ settings:
 rules:
   arrow-body-style: 0
   max-len: 0
+  no-underscore-dangle: 0
 
 parserOptions:
   ecmaFeatures:
