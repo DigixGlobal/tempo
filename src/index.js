@@ -6,7 +6,7 @@ export default class Tempo {
     this.web3 = web3;
     this.currentBlock = 0;
     return this.determineApiSupport()
-    .then(this.saveCurrentBlock())
+    .then(this.getCurrentBlock())
     .then(() => this);
   }
 
@@ -15,13 +15,13 @@ export default class Tempo {
   determineApiSupport() {
     return new Promise((resolve) => {
       this.web3.version.getNode((err, node) => {
-        this.chronAPI = node.includes('TestRPC');
+        this.testRpcApi = node.includes('TestRPC');
         resolve();
       });
     });
   }
 
-  saveCurrentBlock() {
+  getCurrentBlock() {
     return new Promise((resolve) => {
       this.web3.eth.getBlock('latest', (e, block) => {
         this.currentBlock = block.number;
@@ -43,67 +43,59 @@ export default class Tempo {
     });
   }
 
-  waitFor(blocksToWait, dateOrSeconds) {
-    if (this.chronAPI) {
-      return this.waitForChron(blocksToWait, dateOrSeconds);
-    }
-    return this.waitForNoChron(blocksToWait);
-  }
-
-  waitForChron(blocksToWait, secondsToJump) {
-
-    // get current blockctime
-    // simply jump to the block...
-    // use evm_mine in series until current block is > existing block
+  waitForBlocks(blocksToWait, secondsToJump) {
     return new Promise((resolve) => {
-      this.saveCurrentBlock().then(() => {
-        let targetBlock = this.currentBlock + blocksToWait;
-        if (secondsToJump) { targetBlock -= 1; }
-        resolve({ targetBlock });
+      this.getCurrentBlock().then(() => {
+        resolve(this.currentBlock + blocksToWait);
       });
-    }).then(({ targetBlock }) => {
-      const logBlock = (n) => {
-        process.stdout.write(`🚀  warped to block ${n}\n`);
-      };
-      return new Promise((resolve) => {
-        const asyncIterator = () => {
-          // minus one block if we have seoncds to jump as we mine again once afterwards
-          if (this.currentBlock >= targetBlock) {
-            if (!secondsToJump) {
-              logBlock(this.currentBlock);
-              return resolve();
-            }
-            logBlock(this.currentBlock + 1);
-            return this.sendRpc('evm_increaseTime', [secondsToJump])
-            .then(() => this.sendRpc('evm_mine'))
-            .then(() => this.saveCurrentBlock())
-            .then(() => resolve());
-          }
-          return this.sendRpc('evm_mine')
-          .then(() => this.saveCurrentBlock())
-          .then(asyncIterator);
-        };
-        asyncIterator();
-      });
+    })
+    .then((targetBlock) => {
+      return this.waitUntilBlock(targetBlock, secondsToJump);
     });
   }
 
-  waitForNoChron(blockToWait) {
-
+  waitUntilBlock(targetBlock, secondsToJump) {
+    if (this.testRpcApi) {
+      return this.testRpcWaitForBlockNumber(targetBlock, secondsToJump);
+    }
+    return this.gethWaitForBlockNumber(targetBlock);
   }
 
-  waitUntil(targetBlock, dateOrSeconds) {
-    // this.startMining()
+
+  testRpcWaitForBlockNumber(targetBlock, secondsToJump) {
+    const logBlock = (n) => {
+      process.stdout.write(`      🚀  warped to block ${n}\n`);
+    };
+    const realTargetBlock = secondsToJump ? targetBlock - 1 : targetBlock;
+    return new Promise((resolve) => {
+      const asyncIterator = () => {
+        // minus one block if we have seoncds to jump as we mine again once afterwards
+        if (this.currentBlock >= realTargetBlock) {
+          if (!secondsToJump) {
+            logBlock(this.currentBlock);
+            return resolve();
+          }
+          logBlock(this.currentBlock + 1);
+          return this.sendRpc('evm_increaseTime', [secondsToJump])
+          .then(() => this.sendRpc('evm_mine'))
+          .then(() => this.getCurrentBlock())
+          .then(() => resolve());
+        }
+        return this.sendRpc('evm_mine')
+        .then(() => this.getCurrentBlock())
+        .then(asyncIterator);
+      };
+      asyncIterator();
+    });
   }
 
-  startMining() {
-    // don't do anything if we're using TestRPC, just force a block to be mined on end
+  gethWaitForBlockNumber(blockToWait) {
+    return new Promise((resolve) => {
+      console.log('howdy')
+      resolve();
+    })
   }
-
-  stopMining() {
-    // send stop mining command if we're not using TestRPC
-    // force a block to be mined if we are using TestRPC
-  }
+  // TODO implement
 
   snapshot() {
 

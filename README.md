@@ -13,13 +13,14 @@ Tempo provides a simple interface for 'fast-forwarding' time (mining blocks) tha
 const tempo = new Tempo(web3);
 
 // API for both TestRPC and regular RPC
-tempo.toBlock(n); // mine until we hit this block number
-tempo.waitFor(n); // mine for x number of blocks
+tempo.waitForBlocks(n); // mine for x number of blocks
+tempo.waitUntilBlock(n); // mine until we hit this block number
 tempo.currentBlock;
 
 // API for TestRPC only
-tempo.toBlock(n, timestamp);
-tempo.waitFor(n, timestamp);
+tempo.waitForBlocks(n, secondsToProgress);
+tempo.waitUntilBlock(n, secondsToProgress);
+// TODO
 tempo.snapshot('snapshotId');
 tempo.restore('snapshotId');
 ```
