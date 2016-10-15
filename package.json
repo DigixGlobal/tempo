@@ -1,6 +1,6 @@
 {
   "name": "@digix/tempo",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Testing tool: Time management over RPC",
   "main": "src/index.js",
   "scripts": {
@@ -13,7 +13,7 @@
     "type" : "git",
     "url" : "https://github.com/DigixGlobal/tempo.git"
   },
-  "homepage": "https://github.com/DigixGlobal/tempo",  
+  "homepage": "https://github.com/DigixGlobal/tempo",
   "devDependencies": {
     "async-while": "^1.1.0",
     "babel-preset-es2015": "^6.16.0",
