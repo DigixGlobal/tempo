@@ -22,7 +22,9 @@ npm i --save-dev @digix/tempo
 
 ```javascript
 // pass web3 instance to tempo, it will auto-detect whether you're using TestRPC or not
-const tempo = new Tempo(web3);
+new Tempo(web3).then((tempo) => {
+    // now you can use `tempo`
+});
 
 // API for both TestRPC and regular RPC
 tempo.waitForBlocks(n).then(() => { // mine for x number of blocks from now
@@ -42,6 +44,31 @@ tempo.waitUntilBlock(n, seconds);
 tempo.snapshot('snapshotId');
 tempo.restore('snapshotId');
 
+```
+
+## Example
+
+```javascript
+describe('feeDays', function () {
+  // set the 'now' using tempo...
+  it('calculates the correct number of fee days', function () {
+    const numberOfDays = randomInt(12, 40);
+    const numberOfSeconds = numberOfDays * 60 * 60 * 24;
+    let beforeTime;
+    tempo.waitForBlocks(1) // reset the time
+    .then(() => {
+      beforeTime = tempo.currentTimestamp;
+      // check the current time is fine...
+      return digixMath.feeDays.call(beforeTime);
+    }).then((res) => {
+      assert.equal(0, res.toNumber());
+      // zoom a few days into the future
+      return tempo.waitForBlocks(1, numberOfSeconds);
+    })
+    .then(() => digixMath.feeDays.call(beforeTime))
+    .then((res) => assert.equal(numberOfDays, res.toNumber()));
+  });
+});
 ```
 
 ## Tests

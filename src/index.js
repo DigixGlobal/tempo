@@ -41,7 +41,8 @@ export default class Tempo {
 
   _testRpcWaitForBlockNumber(targetBlock, secondsToJump) {
     const logBlock = (n) => {
-      process.stdout.write(`🚀  warped to block ${n}\n`);
+      const secondsText = !secondsToJump ? '' : `, fast forward ${secondsToJump} seconds`;
+      process.stdout.write(`🚀  warped to block ${n}${secondsText}\n`);
     };
     const realTargetBlock = secondsToJump ? targetBlock - 1 : targetBlock;
     return new Promise((resolve) => {
