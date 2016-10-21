@@ -42,7 +42,7 @@ export default class Tempo {
   _testRpcWaitForBlockNumber(targetBlock, secondsToJump) {
     const logBlock = (n) => {
       const secondsText = !secondsToJump ? '' : `, fast forward ${secondsToJump} seconds`;
-      process.stdout.write(`🚀  warped to block ${n}${secondsText}\n`);
+      // process.stdout.write(`🚀  warped to block ${n}${secondsText}\n`);
     };
     const realTargetBlock = secondsToJump ? targetBlock - 1 : targetBlock;
     return new Promise((resolve) => {
@@ -77,7 +77,7 @@ export default class Tempo {
         filter.watch(() => {
           this._getCurrentBlock().then(() => {
             if (this.currentBlock >= targetBlock && !resolved) {
-              process.stdout.write(`⛏  reached block ${this.currentBlock}\n`);
+              // process.stdout.write(`⛏  reached block ${this.currentBlock}\n`);
               resolved = true;
               filter.stopWatching();
               this._sendRpc('miner_stop')
