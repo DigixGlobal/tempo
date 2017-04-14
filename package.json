@@ -1,6 +1,6 @@
 {
   "name": "@digix/tempo",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "Testing tool: Time management over RPC",
   "main": "lib/index.js",
   "scripts": {
