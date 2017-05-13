@@ -4,7 +4,7 @@
 
 
 ```javascript
-const { wait, waitUntilBlock } = require('@digix/tempo');
+const { wait, waitUntilBlock } = require('@digix/tempo')(web3);
 // wait will wait for `n` blocks; (seconds, blocks), default (20, 1)
 // waitUntilBlock will wait until `n` specific block; (seconds, blockNumber)
 
