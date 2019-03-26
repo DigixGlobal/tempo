@@ -1,7 +1,7 @@
 module.exports = (web3) => {
   function sendRpc(method, params) {
     return new Promise((resolve) => {
-      web3.currentProvider.sendAsync({
+      web3.currentProvider.send({
         jsonrpc: '2.0',
         method,
         params: params || [],
